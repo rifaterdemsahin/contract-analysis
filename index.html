@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Erdem Income & Career Roadmap Analysis</title>
+  <meta name="description" content="An interactive professional roadmap, financial metrics dashboard, and timeline analysis of contract and consulting roles.">
+  <link rel="stylesheet" href="index.css">
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar" aria-label="Main Navigation">
+    <div class="logo-container">
+      <div class="logo-icon">E</div>
+      <span>Roadmap.io</span>
+    </div>
+    
+    <ul class="nav-links">
+      <li class="nav-item active" id="nav-dashboard"><a href="#dashboard">Dashboard</a></li>
+      <li class="nav-item" id="nav-timeline"><a href="#timeline-sec">Roadmap Timeline</a></li>
+      <li class="nav-item" id="nav-table"><a href="#data-table-sec">Historical Data</a></li>
+    </ul>
+
+    <div class="theme-toggle-container">
+      <span style="font-size: 0.85rem; font-weight: 500;">Appearance</span>
+      <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle dark mode">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Area -->
+  <main class="main-content">
+    <header>
+      <div>
+        <h1 id="main-title">Professional Roadmap & Contract Analysis</h1>
+        <div class="subtitle">Interactive financial analysis, location trajectory, and core metrics from contract history.</div>
+      </div>
+    </header>
+
+    <!-- Metrics KPI Grid -->
+    <section class="metrics-grid" aria-label="Key Performance Indicators">
+      <div class="metric-card">
+        <div class="metric-title">Current Base (UK)</div>
+        <div class="metric-value" id="stat-base">SRE</div>
+        <div class="metric-footer">
+          <span class="trend-up">Active Focus</span>
+          <span>• Reading, UK</span>
+        </div>
+      </div>
+      
+      <div class="metric-card">
+        <div class="metric-title">Peak Net Position</div>
+        <div class="metric-value" id="stat-net-position">200K</div>
+        <div class="metric-footer">
+          <span class="trend-up">▲ 2000 Peak</span>
+          <span>• TR market</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">Countries Explored</div>
+        <div class="metric-value" id="stat-countries">5+</div>
+        <div class="metric-footer">
+          <span>TR, DE, IE, CH, UK</span>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-title">Tracked Milestones</div>
+        <div class="metric-value" id="stat-milestones">44</div>
+        <div class="metric-footer">
+          <span>Excel entries analyzed</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visualizations and Timeline Grid -->
+    <div class="viz-grid">
+      <!-- Chart Area -->
+      <section class="card" id="dashboard" aria-label="Financial and Net Position Chart">
+        <div class="card-title">
+          <span>Financial Growth & Position Trajectory</span>
+          <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-secondary);">Position over Time</span>
+        </div>
+        <div style="position: relative; height: 350px; width: 100%;">
+          <canvas id="financialChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Sidebar Timeline -->
+      <section class="card" id="timeline-sec" aria-label="Roadmap Milestones">
+        <div class="card-title">
+          <span>Key Career Events</span>
+        </div>
+        <div class="timeline-container">
+          <div class="timeline" id="timeline-list">
+            <!-- Timeline elements populated by JS -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Filters and Table Card -->
+    <section class="card" id="data-table-sec" aria-label="Detailed History Database">
+      <div class="card-title">
+        <span>Detailed Contract Database</span>
+      </div>
+      
+      <!-- Interactive Filtering controls -->
+      <div class="filters-section">
+        <input type="text" class="search-input" id="search-box" placeholder="Search by role, city, country, or notes...">
+        
+        <select class="select-filter" id="filter-country">
+          <option value="">All Countries</option>
+        </select>
+        
+        <select class="select-filter" id="filter-role">
+          <option value="">All Roles</option>
+        </select>
+      </div>
+
+      <!-- Data Table container -->
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Role</th>
+              <th>Country / City</th>
+              <th>Net Money</th>
+              <th>Net Position</th>
+              <th>Details & Learnings</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Table content populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Import data and application logic -->
+  <script src="data.js"></script>
+  <script>
+    // Theme toggle function
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const htmlEl = document.documentElement;
+    themeToggleBtn.addEventListener('click', () => {
+      const currentTheme = htmlEl.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      htmlEl.setAttribute('data-theme', newTheme);
+      updateChartTheme(newTheme);
+    });
+
+    // Populate Filters
+    const uniqueCountries = [...new Set(rawExcelData.map(d => d.COUNTRY).filter(Boolean))].sort();
+    const countryFilter = document.getElementById('filter-country');
+    uniqueCountries.forEach(country => {
+      const opt = document.createElement('option');
+      opt.value = country;
+      opt.textContent = country;
+      countryFilter.appendChild(opt);
+    });
+
+    // Clean roles for a cleaner filter
+    const cleanedRoles = [...new Set(rawExcelData.map(d => {
+      if (!d.role) return '';
+      // take first part before dash or space if long
+      const parts = d.role.split(/[-,\/]/);
+      return parts[0].trim().toLowerCase();
+    }).filter(Boolean))].sort();
+    
+    const roleFilter = document.getElementById('filter-role');
+    cleanedRoles.forEach(role => {
+      const opt = document.createElement('option');
+      opt.value = role;
+      opt.textContent = role.charAt(0).toUpperCase() + role.slice(1);
+      roleFilter.appendChild(opt);
+    });
+
+    // Chart Configuration
+    let financialChart;
+    const chartCtx = document.getElementById('financialChart').getContext('2d');
+
+    function initChart(theme) {
+      // Filter out textual years for the chart line to keep it clean, sort chronologically
+      const chartData = rawExcelData
+        .filter(d => typeof d.year === 'number' || !isNaN(Number(d.year)))
+        .map(d => ({
+          year: Number(d.year),
+          position: d['Net Position'] !== "" ? Number(d['Net Position']) : 0,
+          money: d['Net Money in the bank ( Worth )( spending )'] !== "" ? Number(d['Net Money in the bank ( Worth )( spending )']) : 0
+        }))
+        .sort((a, b) => a.year - b.year);
+
+      // Deduplicate by year (take latest position/money for that year)
+      const uniqueYearsData = [];
+      const seenYears = new Set();
+      chartData.forEach(item => {
+        if (!seenYears.has(item.year)) {
+          seenYears.add(item.year);
+          uniqueYearsData.push(item);
+        } else {
+          // update
+          const idx = uniqueYearsData.findIndex(u => u.year === item.year);
+          if (idx !== -1) {
+            uniqueYearsData[idx] = item;
+          }
+        }
+      });
+
+      const labels = uniqueYearsData.map(d => d.year);
+      const positions = uniqueYearsData.map(d => d.position);
+      const money = uniqueYearsData.map(d => d.money);
+
+      const gridColor = theme === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+      const textColor = theme === 'dark' ? '#9ca3af' : '#475569';
+
+      financialChart = new Chart(chartCtx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Net Position (GBP K)',
+              data: positions,
+              borderColor: '#8b5cf6',
+              backgroundColor: 'rgba(139, 92, 246, 0.1)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.4,
+              pointBackgroundColor: '#8b5cf6'
+            },
+            {
+              label: 'Net Money (Worth)',
+              data: money,
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.1)',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.3,
+              pointBackgroundColor: '#06b6d4'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: textColor,
+                font: { family: 'Outfit', size: 12 }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: gridColor },
+              ticks: { color: textColor, font: { family: 'Outfit' } }
+            },
+            y: {
+              grid: { color: gridColor },
+              ticks: { color: textColor, font: { family: 'Outfit' } }
+            }
+          }
+        }
+      });
+    }
+
+    function updateChartTheme(theme) {
+      if (financialChart) {
+        financialChart.destroy();
+      }
+      initChart(theme);
+    }
+
+    // Populate timeline list
+    function renderTimeline() {
+      const timelineList = document.getElementById('timeline-list');
+      timelineList.innerHTML = '';
+      
+      // Sort and take relevant years/pivots
+      const items = [...rawExcelData].reverse(); // latest first
+      items.forEach(d => {
+        const itemEl = document.createElement('div');
+        const isPivot = d.year.toString().includes('PIVOT') || d.year.toString().includes('SABBATICAL');
+        itemEl.className = `timeline-item ${isPivot ? 'pivot' : ''}`;
+        
+        let headerText = d.year;
+        let dateClass = isPivot ? 'timeline-date pivot-date' : 'timeline-date';
+        
+        let positionInfo = '';
+        if (d['Net Position'] !== "") {
+          positionInfo = `Net Pos: ${d['Net Position']}K`;
+        }
+
+        let roleInfo = d.role ? d.role : 'Pivot / Learning';
+        let desc = d['Description / GAP / Marketing / Learned '] || d['Rationale'] || '';
+        let country = d.COUNTRY ? `📍 ${d.COUNTRY}` : '';
+
+        itemEl.innerHTML = `
+          <div class="${dateClass}">
+            <span>${headerText}</span>
+            <span>${positionInfo}</span>
+          </div>
+          <div class="timeline-title">${roleInfo}</div>
+          <p class="timeline-desc">${desc}</p>
+          <div class="timeline-tags">
+            ${country ? `<span class="tag accent">${country}</span>` : ''}
+            ${d['location city '] ? `<span class="tag">${d['location city ']}</span>` : ''}
+            ${d['Skills Added Symbols'] ? `<span class="tag">${d['Skills Added Symbols']}</span>` : ''}
+          </div>
+        `;
+        timelineList.appendChild(itemEl);
+      });
+    }
+
+    // Populate Table
+    const tableBody = document.getElementById('table-body');
+    const searchBox = document.getElementById('search-box');
+
+    function renderTable() {
+      const query = searchBox.value.toLowerCase();
+      const selectedCountry = countryFilter.value;
+      const selectedRole = roleFilter.value;
+      
+      tableBody.innerHTML = '';
+
+      const filtered = rawExcelData.filter(d => {
+        // Search matches
+        const matchesQuery = !query || 
+          d.year.toString().toLowerCase().includes(query) ||
+          (d.role && d.role.toLowerCase().includes(query)) ||
+          (d.COUNTRY && d.COUNTRY.toLowerCase().includes(query)) ||
+          (d['location city '] && d['location city '].toLowerCase().includes(query)) ||
+          (d['Description / GAP / Marketing / Learned '] && d['Description / GAP / Marketing / Learned '].toLowerCase().includes(query));
+
+        // Country matches
+        const matchesCountry = !selectedCountry || d.COUNTRY === selectedCountry;
+
+        // Role matches
+        const matchesRole = !selectedRole || (d.role && d.role.toLowerCase().includes(selectedRole));
+
+        return matchesQuery && matchesCountry && matchesRole;
+      });
+
+      filtered.forEach(d => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight: 600; color: var(--accent-primary);">${d.year}</td>
+          <td>
+            <div style="font-weight: 500;">${d.role || '-'}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${d['Work Structure'] || ''} • ${d['Type'] || ''}</div>
+          </td>
+          <td>
+            <div>${d.COUNTRY || '-'}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">${d['location city '] || ''}</div>
+          </td>
+          <td>${d['Net Money in the bank ( Worth )( spending )'] !== "" ? `${d['Net Money in the bank ( Worth )( spending )']}K` : '-'}</td>
+          <td>${d['Net Position'] !== "" ? `${d['Net Position']}K` : '-'}</td>
+          <td style="max-width: 300px; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+            ${d['Description / GAP / Marketing / Learned '] || d['Rationale'] || '-'}
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    // Set stats dynamically
+    function calculateStats() {
+      // Latest active focus is SRE in UK
+      const currentYear = rawExcelData.find(d => d.year === 2026);
+      if (currentYear) {
+        document.getElementById('stat-base').textContent = currentYear.role ? currentYear.role.split(/[-,\/]/)[0].toUpperCase() : 'SRE';
+      }
+
+      // Max net position
+      const positions = rawExcelData.map(d => Number(d['Net Position'])).filter(n => !isNaN(n));
+      const maxPos = Math.max(...positions, 0);
+      document.getElementById('stat-net-position').textContent = maxPos > 0 ? `${maxPos}K` : '200K';
+
+      // Count countries
+      const uniqueCountriesCount = new Set(rawExcelData.map(d => d.COUNTRY).filter(Boolean)).size;
+      document.getElementById('stat-countries').textContent = `${uniqueCountriesCount}`;
+
+      // Total records
+      document.getElementById('stat-milestones').textContent = rawExcelData.length;
+    }
+
+    // Event listeners for filters
+    searchBox.addEventListener('input', renderTable);
+    countryFilter.addEventListener('change', renderTable);
+    roleFilter.addEventListener('change', renderTable);
+
+    // Initializer
+    calculateStats();
+    initChart('dark');
+    renderTimeline();
+    renderTable();
+
+    // Smooth navigation active states
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        navItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
